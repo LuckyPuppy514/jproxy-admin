@@ -58,3 +58,7 @@ export function clearAllSystemCache() {
 export function listAuthor() {
   return axios.get<string[]>('/system/config/author/list');
 }
+
+export function isLoginEnabled() {
+  return axios.get<boolean>('/system/user/isLoginEnabled');
+}

@@ -67,6 +67,7 @@
   import { useUserStore } from '@/store';
   import useLoading from '@/hooks/loading';
   import type { LoginRequest } from '@/api/system';
+  import { isLoginEnabled } from '@/api/system';
   import { aesDecrypt, aesEncrypt, md5 } from '@/utils/crypto';
 
   const router = useRouter();
@@ -138,6 +139,37 @@
   const setRememberPassword = (value: boolean) => {
     loginConfig.value.rememberPassword = value;
   };
+
+  const tryAnonymous = async () => {
+    setLoading(true);
+    try {
+      const res = await isLoginEnabled();
+      if (res.data) {
+        return;
+      }
+
+      const loginRequest = {
+        username: 'Anonymous',
+        password: 'Anonymous',
+      };
+      loginRequest.password = md5(loginRequest.password);
+      await userStore.login(loginRequest as LoginRequest);
+      const { redirect, ...othersQuery } = router.currentRoute.value.query;
+      router.push({
+        name: (redirect as string) || 'systemConfig',
+        query: {
+          ...othersQuery,
+        },
+      });
+      Message.success(t('login.success'));
+    } catch (err) {
+      errorMessage.value = (err as Error).message;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  tryAnonymous();
 </script>
 
 <style lang="less" scoped>
